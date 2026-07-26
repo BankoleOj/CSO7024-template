@@ -1,0 +1,116 @@
+name: Terraform Plan
+
+on:
+  pull_request:
+    paths:
+      - "labs/week4-iac/starter/envs/dev/**"
+      - "labs/week4-iac/starter/envs/prod/**"
+      - "labs/week4-iac/starter/modules/**"
+      - "labs/week4-iac/starter/scripts/start-state-backend.sh"
+      - ".github/workflows/terraform-plan.yml"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  terraform-plan:
+    name: Terraform plan - ${{ matrix.environment }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        environment:
+          - dev
+          - prod
+
+    env:
+      TF_IN_AUTOMATION: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive labs/week4-iac/starter
+
+      - name: Start local state backend
+        run: |
+          chmod +x labs/week4-iac/starter/scripts/start-state-backend.sh
+          nohup labs/week4-iac/starter/scripts/start-state-backend.sh \
+            > /tmp/terraform-backend.log 2>&1 &
+          sleep 3
+          cat /tmp/terraform-backend.log
+
+      - name: Initialise Terraform
+        working-directory: labs/week4-iac/starter/envs/${{ matrix.environment }}
+        run: terraform init -input=false -reconfigure
+
+      - name: Validate Terraform
+        working-directory: labs/week4-iac/starter/envs/${{ matrix.environment }}
+        run: terraform validate
+
+      - name: Generate Terraform plan
+        id: plan
+        working-directory: labs/week4-iac/starter/envs/${{ matrix.environment }}
+        shell: bash
+        run: |
+          set +e
+          terraform plan -no-color -input=false -lock=false > plan.txt 2>&1
+          exit_code=$?
+          cat plan.txt
+          echo "exit_code=$exit_code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Post plan on pull request
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          ENVIRONMENT_NAME: ${{ matrix.environment }}
+        with:
+          script: |
+            const fs = require("fs");
+            const environment = process.env.ENVIRONMENT_NAME;
+            const path =
+              `labs/week4-iac/starter/envs/${environment}/plan.txt`;
+
+            let plan = "Terraform did not produce a plan file.";
+            if (fs.existsSync(path)) {
+              plan = fs.readFileSync(path, "utf8");
+            }
+
+            const maximumLength = 60000;
+            if (plan.length > maximumLength) {
+              plan = plan.substring(0, maximumLength)
+                + "\n\nPlan output was truncated.";
+            }
+
+            const body = [
+              `## Terraform plan: ${environment}`,
+              "",
+              "<details>",
+              "<summary>Show plan output</summary>",
+              "",
+              "```terraform",
+              plan,
+              "```",
+              "",
+              "</details>"
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
+
+      - name: Fail when Terraform plan fails
+        if: steps.plan.outputs.exit_code != '0'
+        run: |
+          echo "Terraform plan failed with exit code ${{ steps.plan.outputs.exit_code }}."
+          exit 1

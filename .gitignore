@@ -40,3 +40,20 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Local backend
+labs/week4-iac/starter/.tfstate-backend/
+
+# Generated files
+labs/week4-iac/starter/envs/dev/hello.txt
+labs/week4-iac/starter/envs/prod/hello.txt
+
+# OS files
+.DS_Store
+Thumbs.db

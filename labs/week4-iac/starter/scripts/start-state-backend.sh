@@ -50,8 +50,9 @@ SAFE = re.compile(r"[^a-zA-Z0-9_-]")
 
 
 def _key(path: str) -> str:
-    # /state/dev -> dev ; keep it filesystem-safe
-    name = path.strip("/").split("/", 1)[-1] or "default"
+    # Remove query parameters added by Terraform during state updates.
+    clean_path = path.split("?", 1)[0]
+    name = clean_path.strip("/").split("/", 1)[-1] or "default"
     return SAFE.sub("_", name)
 
 
