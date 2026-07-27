@@ -56,7 +56,10 @@ def render_inventory(hosts: list[dict[str, str]]) -> str:
     """Render an INI inventory with a single web_servers group."""
     lines = ["[web_servers]"]
     for host in hosts:
-        name = host.get("name", host["ip"])
+   	name = host.get("name", host["ip"])
+    	ip = host["ip"]
+    	user = host.get("user", "devops")
+
         lines.append(
    		f"{name} ansible_host={ip} "
     		f"ansible_user={user} "
