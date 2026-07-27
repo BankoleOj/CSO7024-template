@@ -43,7 +43,7 @@ jobs:
       # Hint: run in the terraform/ directory and pass -auto-approve so the
       # workflow does not wait for interactive confirmation.
       - name: Terraform apply
-        working-directory: terraform
+        working-directory: labs/week5-config-mgmt/starter/terraform
         run: |
           terraform init
           terraform apply --auto-approve
@@ -51,7 +51,7 @@ jobs:
       # TODO (Step 7): generate the inventory from the Terraform outputs.
       # Hint: run scripts/generate_inventory.py from the ansible/ directory.
       - name: Generate inventory
-        working-directory: ansible
+        working-directory: labs/week5-config-mgmt/starter/ansible
         run: |
           python scripts/generate_inventory.py
 
@@ -59,16 +59,16 @@ jobs:
       # ANSIBLE_VAULT_PASSWORD secret. Hint: write the secret to a file and pass
       # --vault-password-file, or point Ansible at it another way.
       - name: Run Ansible
-        working-directory: ansible
+        working-directory: labs/week5-config-mgmt/starter/ansible
         env:
           ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
         run: |
           echo "$ANSIBLE_VAULT_PASSWORD" > vault-password.txt
           ansible-playbook -i inventory/inventory.ini site.yml --vault-password-file vault-password.txt
 
-      # ODO (Stretch goal): fail the job if any host fails the smoke test.
+      # TODO (Stretch goal): fail the job if any host fails the smoke test.
       # Hint: smoke_test.py already exits non-zero on failure, so just run it.
       - name: Smoke test
-        working-directory: ansible
+        working-directory: labs/week5-config-mgmt/starter/ansible
         run: |
           python ../tests/smoke_test.py
