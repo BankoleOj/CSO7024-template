@@ -58,9 +58,11 @@ def render_inventory(hosts: list[dict[str, str]]) -> str:
     for host in hosts:
         name = host.get("name", host["ip"])
         lines.append(
-            f"{name} ansible_host={host['ip']} ansible_user={host['user']} "
-            "ansible_ssh_common_args='-o StrictHostKeyChecking=no'"
-        )
+   		f"{name} ansible_host={ip} "
+    		f"ansible_user={user} "
+    		f"ansible_password=devops "
+    		f"ansible_ssh_common_args='-o StrictHostKeyChecking=no'"
+	)
     lines.append("")  # trailing newline
     return "\n".join(lines)
 
