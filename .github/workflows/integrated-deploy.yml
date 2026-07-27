@@ -60,11 +60,8 @@ jobs:
       # --vault-password-file, or point Ansible at it another way.
       - name: Run Ansible
         working-directory: labs/week5-config-mgmt/starter/ansible
-        env:
-          ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
         run: |
-          echo "$ANSIBLE_VAULT_PASSWORD" > vault-password.txt
-          ansible-playbook -i inventory/inventory.ini site.yml --vault-password-file vault-password.txt
+          ansible-playbook -i inventory/inventory.ini site.yml
 
       # ODO (Stretch goal): fail the job if any host fails the smoke test.
       # Hint: smoke_test.py already exits non-zero on failure, so just run it.
