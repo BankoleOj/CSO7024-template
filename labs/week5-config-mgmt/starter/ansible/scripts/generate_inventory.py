@@ -51,22 +51,23 @@ def load_hosts(outputs_path: Path) -> list[dict[str, str]]:
 
     return hosts
 
-
 def render_inventory(hosts: list[dict[str, str]]) -> str:
     """Render an INI inventory with a single web_servers group."""
     lines = ["[web_servers]"]
+
     for host in hosts:
-   	name = host.get("name", host["ip"])
-    	ip = host["ip"]
-    	user = host.get("user", "devops")
+        name = host.get("name", host["ip"])
+        ip = host["ip"]
+        user = host.get("user", "devops")
 
         lines.append(
-   		f"{name} ansible_host={ip} "
-    		f"ansible_user={user} "
-    		f"ansible_password=devops "
-    		f"ansible_ssh_common_args='-o StrictHostKeyChecking=no'"
-	)
-    lines.append("")  # trailing newline
+            f"{name} ansible_host={ip} "
+            f"ansible_user={user} "
+            f"ansible_password=devops "
+            f"ansible_ssh_common_args='-o StrictHostKeyChecking=no'"
+        )
+
+    lines.append("")
     return "\n".join(lines)
 
 
